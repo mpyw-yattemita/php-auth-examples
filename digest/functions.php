@@ -28,7 +28,7 @@ function require_digest_auth()
         }
         // ユーザ名に対応するダイジェストを取り出し，期待されるレスポンスを生成する
         $expected = md5(implode(':', [
-            isset($digests[$p['username']]) ? $digests[$p['username']] : md5(''),
+            isset($digests[$p['username']]) ? $digests[$p['username']] : '',
             $p['nonce'],
             $p['nc'],
             $p['cnonce'],
