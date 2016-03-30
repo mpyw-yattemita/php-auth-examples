@@ -13,21 +13,23 @@ function require_basic_auth()
         'username' => '$2y$10$5oJchTrDqSp7L9PsZ.WxPOHw7f7YAjpiUbQvRNKMb2tNPcBfl.CMu',
     ];
 
-    switch (true) {
-        // Basic認証に必要なパラメータが送信されたかどうか
-        case !isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']):
-        // ユーザ名が有効か
-        case !isset($hashes[$_SERVER['PHP_AUTH_USER']]):
-        // パスワードハッシュに適合する正しいパスワードかどうか
-        case !password_verify($_SERVER['PHP_AUTH_PW'], $hashes[$_SERVER['PHP_AUTH_USER']]):
-            // いずれか1つでも失敗したとき
-            header('WWW-Authenticate: Basic realm="Enter username and password."');
-            header('Content-Type: text/plain; charset=utf-8');
-            exit('このページを見るにはログインが必要です');
-        default:
-            // 全て成功したときにはユーザ名を返す
-            return $_SERVER['PHP_AUTH_USER'];
+    if (
+        !isset($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) ||
+        !password_verify(
+            $_SERVER['PHP_AUTH_PW'],
+            isset($hashes[$_SERVER['PHP_AUTH_USER']])
+                ? $hashes[$_SERVER['PHP_AUTH_USER']]
+                : '$2y$10$abcdefghijklmnopqrstuv' // ユーザ名が存在しないときだけ極端に速くなるのを防ぐ
+        )
+    ) {
+        // 初回時または認証が失敗したとき
+        header('WWW-Authenticate: Basic realm="Enter username and password."');
+        header('Content-Type: text/plain; charset=utf-8');
+        exit('このページを見るにはログインが必要です');
     }
+
+    // 認証が成功したときはユーザ名を返す
+    return $_SERVER['PHP_AUTH_USER'];
 }
 
 /**

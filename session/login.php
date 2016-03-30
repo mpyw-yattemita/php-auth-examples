@@ -14,25 +14,27 @@ $password = filter_input(INPUT_POST, 'password');
 
 // POSTメソッドのときのみ実行
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    switch (true) {
-        // 妥当なCSRFトークンか
-        case !validate_token(filter_input(INPUT_POST, 'token')):
-        // ユーザ名が有効か
-        case !isset($hashes[$username]):
-        // パスワードハッシュに適合する正しいパスワードか
-        case !password_verify($password, $hashes[$username]):
-            // いずれか1つでも失敗したとき「403 Forbidden」にする
-            http_response_code(403);
-            break;
-        default:
-            // 全て成功したとき，セッションIDの追跡を防ぐため，セッションIDを変更する
-            session_regenerate_id(true);
-            // ユーザ名をセット
-            $_SESSION['username'] = $username;
-            // ログインが完了したので / に遷移
-            header('Location: /');
-            exit;
+    if (
+        validate_token(filter_input(INPUT_POST, 'token')) &&
+        password_verify(
+            $password,
+            isset($hashes[$username])
+                ? $hashes[$username]
+                : '$2y$10$abcdefghijklmnopqrstuv' // ユーザ名が存在しないときだけ極端に速くなるのを防ぐ
+        )
+    ) {
+        // 認証が成功したとき
+        // セッションIDの追跡を防ぐ
+        session_regenerate_id(true);
+        // ユーザ名をセット
+        $_SESSION['username'] = $username;
+        // ログイン完了後に / に遷移
+        header('Location: /');
+        exit;
     }
+    // 認証が失敗したとき
+    // 「403 Forbidden」
+    http_response_code(403);
 }
 
 header('Content-Type: text/html; charset=UTF-8');

@@ -19,18 +19,16 @@ function require_digest_auth()
         $keys = ['response', 'nonce', 'nc', 'cnonce', 'qop', 'uri', 'username'];
         // あらかじめ空欄で埋めておく
         $p = array_fill_keys($keys, '');
-        // 正規表現を生成してパースを実行
+        // 正規表現を生成してパラメータをパース
         $regex = '/(' . implode('|', $keys) . ')=(?:\'([^\']++)\'|"([^"]++)"|([^\s,]++))/';
         preg_match_all($regex, $header, $matches, PREG_SET_ORDER);
         foreach ($matches as $m) {
-            if (isset($p[$m[1]])) {
-                // 見つかったところは空欄を上書き
-                $p[$m[1]] = $m[3] ?: $m[4];
-            }
+            // 見つかったところは空欄を上書き
+            $p[$m[1]] = $m[3] ?: $m[4];
         }
         // ユーザ名に対応するダイジェストを取り出し，期待されるレスポンスを生成する
         $expected = md5(implode(':', [
-            isset($digests[$p['username']]) ? $digests[$p['username']] : '',
+            isset($digests[$p['username']]) ? $digests[$p['username']] : md5(''),
             $p['nonce'],
             $p['nc'],
             $p['cnonce'],
@@ -41,20 +39,19 @@ function require_digest_auth()
         return hash_equals($expected, $p['response']) ? $p['username'] : false;
     };
 
-    switch (true) {
-        // Digest認証に必要なパラメータが送信されたかどうか
-        case !isset($_SERVER['PHP_AUTH_DIGEST']):
-        // ダイジェストが正しいものであったかどうか
-        case !is_string($username = $verify($_SERVER['PHP_AUTH_DIGEST'])):
-            // いずれか1つでも失敗したとき
-            $nonce = md5(openssl_random_pseudo_bytes(30));
-            header('WWW-Authenticate: Digest realm="Enter username and password.", qop=auth, nonce="' . $nonce . '"');
-            header('Content-Type: text/plain; charset=utf-8');
-            exit('このページを見るにはログインが必要です');
-        default:
-            // 全て成功したときはユーザ名を返す
-            return $username;
+    if (
+        !isset($_SERVER['PHP_AUTH_DIGEST']) ||
+        !is_string($username = $verify($_SERVER['PHP_AUTH_DIGEST']))
+    ) {
+        // 初回時または認証が失敗したとき
+        $nonce = md5(openssl_random_pseudo_bytes(30));
+        header('WWW-Authenticate: Digest realm="Enter username and password.", qop=auth, nonce="' . $nonce . '"');
+        header('Content-Type: text/plain; charset=utf-8');
+        exit('このページを見るにはログインが必要です');
     }
+
+    // 認証が成功したときはユーザ名を返す
+    return $username;
 }
 
 /**
