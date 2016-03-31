@@ -2,10 +2,6 @@
 
 cd "$(dirname "$0")"
 
-trap 'killall php-fpm' INT EXIT TERM HUP
-php-fpm &
-sleep 0.1
-
 h2o -c <(cat <<'EOD'
 listen: 8080
 file.index: ['index.php', 'index.html']
