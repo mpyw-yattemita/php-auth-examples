@@ -1,6 +1,8 @@
 <?php
 
 /**
+ * 【簡易版: 盗聴された場合には無意味です】
+ *
  * Digest認証を要求するページの先頭で使う関数
  * 初回時または失敗時にはヘッダを送信してexitする
  *
@@ -52,15 +54,4 @@ function require_digest_auth()
 
     // 認証が成功したときはユーザ名を返す
     return $username;
-}
-
-/**
- * htmlspecialcharsのラッパー関数
- *
- * @param string $str
- * @return string
- */
-function h($str)
-{
-    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 }
