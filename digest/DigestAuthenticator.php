@@ -110,7 +110,6 @@ class DigestAuthenticator
         // ncに1足した値 (16進数表記8桁)
         $next_nc = base_convert($nc, 16, 10);
         $next_nc = bcadd($next_nc, '1');
-        $next_nc = bcmod($next_nc, '4294967296');
         $next_nc = base_convert($next_nc, 10, 16);
         $next_nc = str_pad($next_nc, 8, '0', STR_PAD_LEFT);
         // UPDATEを実行
