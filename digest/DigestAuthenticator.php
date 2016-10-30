@@ -8,7 +8,7 @@ class DigestAuthenticator
     /**
      * 定数各種設定
      */
-    const DB_PATH = '/tmp/digest.db'; // SQLite3のデータベースファイルのパス
+    const DB_FILENAME = 'digest.db'; // テンポラリディレクトリに作るSQLite3のデータベースファイル名
     const AUTH_REALM = 'Enter username and password.'; // Realm
     const AUTH_MESSAGE = 'このページを見るにはログインが必要です'; // 失敗時に出力するテキスト
     const DATE_TIMEZONE = 'Asia/Tokyo'; // タイムゾーン
@@ -60,7 +60,7 @@ class DigestAuthenticator
      */
     private function __construct()
     {
-        $this->pdo = new \PDO('sqlite:' . self::DB_PATH, '', '');
+        $this->pdo = new \PDO('sqlite:' . sys_get_temp_dir() . DIRECTORY_SEPARATOR . self::DB_FILENAME, '', '');
         $this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         // テーブルの作成
         $this->pdo->exec("CREATE TABLE IF NOT EXISTS sessions(
